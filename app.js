@@ -1,55 +1,65 @@
-let collection = [];
+let collection = JSON.parse(localStorage.getItem("collection")) || [];
 
-// Achtercamera starten
 const video = document.getElementById("camera");
 
+// Achtercamera
 navigator.mediaDevices.getUserMedia({
   video: { facingMode: "environment" }
 })
-.then(stream => {
-  video.srcObject = stream;
-})
-.catch(() => {
-  navigator.mediaDevices.getUserMedia({ video: true })
-  .then(stream => video.srcObject = stream);
-});
+.then(stream => video.srcObject = stream)
+.catch(() => navigator.mediaDevices.getUserMedia({ video: true })
+.then(stream => video.srcObject = stream));
 
-// Kaart scannen
-document.getElementById("capture").addEventListener("click", () => {
+document.getElementById("capture").addEventListener("click", async () => {
 
-  const name = prompt("Naam van de kaart:");
-  const set = prompt("Set van de kaart:");
-  const cardmarket = parseFloat(prompt("Cardmarket prijs (€):")) || 0;
-  const tcgplayer = parseFloat(prompt("TCGPlayer prijs (€):")) || 0;
-  const quantity = parseInt(prompt("Aantal:")) || 1;
+  const searchName = prompt("Voer de naam van de Pokémon kaart in:");
 
-  const average = ((cardmarket + tcgplayer) / 2).toFixed(2);
+  if (!searchName) return;
 
-  // Gratis online Pokémon kaart afbeelding (placeholder)
-  const image = "https://images.pokemontcg.io/base1/4.png";
+  // Pokémon TCG API
+  const response = await fetch(
+    `https://api.pokemontcg.io/v2/cards?q=name:${searchName}`
+  );
+
+  const data = await response.json();
+
+  if (!data.data || data.data.length === 0) {
+    alert("Kaart niet gevonden");
+    return;
+  }
+
+  const card = data.data[0];
+
+  const name = card.name;
+  const set = card.set.name;
+  const image = card.images.small;
+
+  const price =
+    card.tcgplayer?.prices?.holofoil?.market ||
+    card.tcgplayer?.prices?.normal?.market ||
+    0;
 
   collection.push({
     name,
     set,
-    cardmarket,
-    tcgplayer,
-    average,
-    quantity,
+    price,
+    quantity: 1,
     image
   });
+
+  localStorage.setItem("collection", JSON.stringify(collection));
 
   renderCollection();
 });
 
-// Totaalwaarde berekenen
 function calculateTotal() {
   return collection.reduce((sum, card) =>
-    sum + (card.quantity * card.average), 0
+    sum + (card.quantity * card.price), 0
   );
 }
 
-// Kaarten tonen
 function renderCollection() {
+
   const list = document.getElementById("cardsList");
   list.innerHTML = "";
 
@@ -58,11 +68,9 @@ function renderCollection() {
     const li = document.createElement("li");
 
     li.innerHTML = `
-      <img src="${card.image}" width="80" style="vertical-align:middle; margin-right:10px;">
+      <img src="${card.image}" width="80" style="vertical-align:middle;margin-right:10px;">
       <b>${card.name}</b> (${card.set}) x${card.quantity}<br>
-      Cardmarket: €${card.cardmarket} |
-      TCGPlayer: €${card.tcgplayer} |
-      Gemiddelde: €${card.average}
+      Marktprijs: €${card.price || 0}
       <br>
       <button onclick="editCard(${index})">✏️</button>
       <button onclick="removeCard(${index})">🗑</button>
@@ -76,19 +84,21 @@ function renderCollection() {
     "Totaalwaarde: €" + calculateTotal().toFixed(2);
 }
 
-// Aantal aanpassen
 function editCard(index) {
   const newQuantity = parseInt(prompt("Nieuw aantal:", collection[index].quantity));
   if (!isNaN(newQuantity)) {
     collection[index].quantity = newQuantity;
+    localStorage.setItem("collection", JSON.stringify(collection));
     renderCollection();
   }
 }
 
-// Kaart verwijderen
 function removeCard(index) {
   if (confirm("Weet je zeker dat je deze kaart wilt verwijderen?")) {
     collection.splice(index, 1);
+    localStorage.setItem("collection", JSON.stringify(collection));
     renderCollection();
   }
 }
+
+renderCollection();
