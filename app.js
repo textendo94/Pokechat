@@ -6,20 +6,29 @@ darkModeToggle.addEventListener("click", () => {
   document.body.classList.toggle("dark");
 });
 
-// Camera setup
+// Achtercamera setup
 const video = document.getElementById("camera");
-navigator.mediaDevices.getUserMedia({ video: true })
+navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } })
   .then(stream => { video.srcObject = stream; })
-  .catch(err => console.error("Camera niet beschikbaar:", err));
+  .catch(err => {
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => { video.srcObject = stream; })
+      .catch(err => console.error("Geen camera beschikbaar", err));
+  });
 
-// Kaart scannen (placeholder)
-document.getElementById("capture").addEventListener("click", () => {
-  // Voor nu toevoegen via prompt
-  const name = prompt("Naam van de kaart:");
+// Kaart scannen (AI-placeholder)
+document.getElementById("capture").addEventListener("click", async () => {
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext("2d").drawImage(video, 0, 0);
+  const imageData = canvas.toDataURL("image/png");
+
+  const name = prompt("Naam van de kaart (AI herkent straks automatisch):");
   const set = prompt("Set van de kaart:");
-  const cardmarket = parseFloat(prompt("Cardmarket prijs (€):")) || 0;
-  const tcgplayer = parseFloat(prompt("TCGPlayer prijs (€):")) || 0;
-  const quantity = parseInt(prompt("Aantal:")) || 1;
+  const cardmarket = parseFloat(prompt("Cardmarket prijs (€)")) || 0;
+  const tcgplayer = parseFloat(prompt("TCGPlayer prijs (€)")) || 0;
+  const quantity = parseInt(prompt("Aantal")) || 1;
   const average = ((cardmarket + tcgplayer)/2).toFixed(2);
 
   collection.push({ name, set, cardmarket, tcgplayer, average, quantity });
