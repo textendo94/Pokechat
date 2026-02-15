@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PokéValue</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>PokéValue</h1>
+    <button id="darkModeToggle">🌙</button>
+  </header>
+
+  <section id="scanner">
+    <h2>Kaart scannen</h2>
+    <video id="camera" autoplay></video>
+    <button id="capture">📸 Scan kaart</button>
+  </section>
+
+  <section id="filters">
+    <h2>Filters</h2>
+    <label>Set: <input type="text" id="filterSet"></label>
+    <label>Waarde min (€): <input type="number" id="filterMin"></label>
+    <label>Waarde max (€): <input type="number" id="filterMax"></label>
+    <button id="applyFilters">Toepassen</button>
+  </section>
+
+  <section id="collection">
+    <h2>Mijn collectie</h2>
+    <div id="totalValue">Totaalwaarde: €0</div>
+    <ul id="cardsList"></ul>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
