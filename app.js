@@ -17,7 +17,7 @@ document.getElementById("capture").addEventListener("click", async () => {
   if (!searchName) return;
 
   // Pokémon TCG API
- const response = await fetch(`/api/search?name=${searchName}`);
+ const response = await fetch(`/api/search?name=${searchName}*`);
 
 
   const data = await response.json();
