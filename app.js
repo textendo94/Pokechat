@@ -1,95 +1,94 @@
 let collection = [];
 
-// Dark mode toggle
-const darkModeToggle = document.getElementById("darkModeToggle");
-darkModeToggle.addEventListener("click", () => {
-  document.body.classList.toggle("dark");
+// Achtercamera starten
+const video = document.getElementById("camera");
+
+navigator.mediaDevices.getUserMedia({
+  video: { facingMode: "environment" }
+})
+.then(stream => {
+  video.srcObject = stream;
+})
+.catch(() => {
+  navigator.mediaDevices.getUserMedia({ video: true })
+  .then(stream => video.srcObject = stream);
 });
 
-// Achtercamera setup
-const video = document.getElementById("camera");
-navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } })
-  .then(stream => { video.srcObject = stream; })
-  .catch(err => {
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => { video.srcObject = stream; })
-      .catch(err => console.error("Geen camera beschikbaar", err));
+// Kaart scannen
+document.getElementById("capture").addEventListener("click", () => {
+
+  const name = prompt("Naam van de kaart:");
+  const set = prompt("Set van de kaart:");
+  const cardmarket = parseFloat(prompt("Cardmarket prijs (€):")) || 0;
+  const tcgplayer = parseFloat(prompt("TCGPlayer prijs (€):")) || 0;
+  const quantity = parseInt(prompt("Aantal:")) || 1;
+
+  const average = ((cardmarket + tcgplayer) / 2).toFixed(2);
+
+  // Gratis online Pokémon kaart afbeelding (placeholder)
+  const image = "https://images.pokemontcg.io/base1/4.png";
+
+  collection.push({
+    name,
+    set,
+    cardmarket,
+    tcgplayer,
+    average,
+    quantity,
+    image
   });
 
-// Kaart scannen (AI-placeholder)
-document.getElementById("capture").addEventListener("click", async () => {
-  const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext("2d").drawImage(video, 0, 0);
-  const imageData = canvas.toDataURL("image/png");
-
-  const name = prompt("Naam van de kaart (AI herkent straks automatisch):");
-  const set = prompt("Set van de kaart:");
-  const cardmarket = parseFloat(prompt("Cardmarket prijs (€)")) || 0;
-  const tcgplayer = parseFloat(prompt("TCGPlayer prijs (€)")) || 0;
-  const quantity = parseInt(prompt("Aantal")) || 1;
-  const average = ((cardmarket + tcgplayer)/2).toFixed(2);
-
-  collection.push({ name, set, cardmarket, tcgplayer, average, quantity });
-  renderCollection(collection);
-});
-
-// Filters toepassen
-document.getElementById("applyFilters").addEventListener("click", () => {
-  const min = parseFloat(document.getElementById("filterMin").value) || 0;
-  const max = parseFloat(document.getElementById("filterMax").value) || Infinity;
-  const set = document.getElementById("filterSet").value.toLowerCase();
-  renderCollection(collection.filter(card => {
-    const price = card.average || 0;
-    return price >= min && price <= max && (!set || card.set.toLowerCase().includes(set));
-  }));
+  renderCollection();
 });
 
 // Totaalwaarde berekenen
 function calculateTotal() {
-  return collection.reduce((sum, card) => sum + ((card.quantity || 1) * (card.average || 0)), 0);
+  return collection.reduce((sum, card) =>
+    sum + (card.quantity * card.average), 0
+  );
 }
 
-// Render collectie + bewerk/verwijder knoppen
-function renderCollection(cards) {
+// Kaarten tonen
+function renderCollection() {
   const list = document.getElementById("cardsList");
   list.innerHTML = "";
-  cards.forEach((card, index) => {
+
+  collection.forEach((card, index) => {
+
     const li = document.createElement("li");
+
     li.innerHTML = `
-      ${card.name} (${card.set}) x${card.quantity} | Cardmarket: €${card.cardmarket} | TCGPlayer: €${card.tcgplayer} | Gemiddelde: €${card.average}
+      <img src="${card.image}" width="80" style="vertical-align:middle; margin-right:10px;">
+      <b>${card.name}</b> (${card.set}) x${card.quantity}<br>
+      Cardmarket: €${card.cardmarket} |
+      TCGPlayer: €${card.tcgplayer} |
+      Gemiddelde: €${card.average}
+      <br>
       <button onclick="editCard(${index})">✏️</button>
       <button onclick="removeCard(${index})">🗑</button>
+      <hr>
     `;
+
     list.appendChild(li);
   });
-  document.getElementById("totalValue").textContent = `Totaalwaarde: €${calculateTotal()}`;
+
+  document.getElementById("totalValue").textContent =
+    "Totaalwaarde: €" + calculateTotal().toFixed(2);
 }
 
-// Kaart bewerken
+// Aantal aanpassen
 function editCard(index) {
-  const card = collection[index];
-  card.quantity = parseInt(prompt("Aantal aanpassen:", card.quantity)) || card.quantity;
-  renderCollection(collection);
+  const newQuantity = parseInt(prompt("Nieuw aantal:", collection[index].quantity));
+  if (!isNaN(newQuantity)) {
+    collection[index].quantity = newQuantity;
+    renderCollection();
+  }
 }
 
 // Kaart verwijderen
 function removeCard(index) {
-  if(confirm(`Weet je zeker dat je ${collection[index].name} wilt verwijderen?`)) {
+  if (confirm("Weet je zeker dat je deze kaart wilt verwijderen?")) {
     collection.splice(index, 1);
-    renderCollection(collection);
+    renderCollection();
   }
 }
-
-// Voor test: voorbeeldkaart
-collection.push({
-  name: "Pikachu",
-  set: "Base",
-  quantity: 2,
-  cardmarket: 5,
-  tcgplayer: 6,
-  average: 5.5
-});
-
-renderCollection(collection);
