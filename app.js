@@ -21,53 +21,7 @@ async function captureCard() {
     // Zoek nummer zoals 123/189
     const match = text.match(/\d+\/\d+/);
 
-    if (!match) {
-      alert("Geen setnummer gevonden. Probeer dichterbij of betere belichting.");
-      return;
-    }
-
-    const cardNumber = match[0];
-    alert("Nummer gevonden: " + cardNumber);
-
-    // API call naar Pokémon TCG
-    const response = await fetch(`https://api.pokemontcg.io/v2/cards?q=number:${cardNumber}&pageSize=1`);
-    const data = await response.json();
-
-    if (!data.data || data.data.length === 0) {
-      alert("Kaart niet gevonden in database.");
-      return;
-    }
-
-    const card = data.data[0];
-
-    const name = card.name;
-    const set = card.set.name;
-    const image = card.images.small;
-
-    const price =
-      card.tcgplayer?.prices?.holofoil?.market ||
-      card.tcgplayer?.prices?.normal?.market ||
-      0;
-
-    // Voeg toe aan collectie
-    collection.push({
-      name,
-      set,
-      price,
-      quantity: 1,
-      image
-    });
-
-    localStorage.setItem("collection", JSON.stringify(collection));
-    renderCollection();
-
-    alert(`${name} toegevoegd!`);
-  } catch (err) {
-    alert("Fout bij scannen of ophalen: " + err.message);
-    console.error(err);
-  }
-}
-
+    alert("OCR tekst: " + text);
 // Achtercamera
 navigator.mediaDevices.getUserMedia({
   video: { facingMode: "environment" }
