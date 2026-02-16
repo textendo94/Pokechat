@@ -10,14 +10,16 @@
 
 <h1>Mijn Pokémon Collectie</h1>
 
-<!-- Camera / Foto -->
 <h2>Scan je kaart</h2>
 <video id="camera" autoplay playsinline style="width:100%; border-radius:12px;"></video>
 <canvas id="snapshot" style="display:none;"></canvas>
 <button onclick="startCamera()">Start Camera</button>
 <button onclick="takePhoto()">Maak Foto & Scan</button>
 
-<!-- Collectie -->
+<h2>Handmatige kaart toevoegen</h2>
+<input type="text" id="manualCardNumber" placeholder="Voer kaartnummer in (bijv. 12/189)">
+<button onclick="addManualCard()">Voeg kaart toe</button>
+
 <h2>Mijn Collectie</h2>
 <ul id="collectionList"></ul>
 
