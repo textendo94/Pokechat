@@ -26,11 +26,6 @@ input, select {
   margin-right: 5px;
 }
 
-video {
-  margin-bottom: 10px;
-  border: 2px solid #fff;
-}
-
 ul {
   list-style: none;
   padding: 0;
@@ -40,4 +35,9 @@ li {
   margin-bottom: 10px;
   border-bottom: 1px solid #555;
   padding-bottom: 5px;
+}
+
+img {
+  vertical-align: middle;
+  margin-right: 10px;
 }
