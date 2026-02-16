@@ -1,6 +1,6 @@
 // 🌟 Globale collectie en preview
 let collection = JSON.parse(localStorage.getItem("collection")) || [];
-let previewCards = []; // tijdelijke previewlijst
+let previewCards = [];
 renderCollection();
 
 // 🌟 Camera starten
@@ -57,7 +57,6 @@ async function takePhoto() {
 
     alert(`Gevonden ${matches.length} kaart(s): ${matches.join(", ")}`);
 
-    // 🌟 Preview opbouwen
     previewCards = [];
     const previewList = document.getElementById("previewList");
     previewList.innerHTML = "";
@@ -86,19 +85,25 @@ async function addSelectedCards() {
     if (box.checked) {
       const card = previewCards.find(c => c.number === box.dataset.number);
       if (card) {
-        await addCardByNumber(card.number, card.image);
+        await addCard(card.number, card.image);
       }
     }
   }
-  // Preview leegmaken
   previewCards = [];
   document.getElementById("previewList").innerHTML = "";
 }
 
-// 🌟 Kaart toevoegen via API
-async function addCardByNumber(cardNumber, fallbackImage = "") {
+// 🌟 Kaart toevoegen via API (op naam of nummer)
+async function addCard(input, fallbackImage = "") {
   try {
-    const response = await fetch(`https://api.pokemontcg.io/v2/cards?q=number:${cardNumber}&pageSize=1`);
+    let query = "";
+    if (input.match(/^\d+\/\d+$/)) {
+      query = `number:${input}`;
+    } else {
+      query = `name:"${input}"`;
+    }
+
+    const response = await fetch(`https://api.pokemontcg.io/v2/cards?q=${query}&pageSize=1`);
     const data = await response.json();
 
     if (!data.data || data.data.length === 0) {
@@ -128,13 +133,13 @@ async function addCardByNumber(cardNumber, fallbackImage = "") {
 
 // 🌟 Handmatig toevoegen
 async function addManualCard() {
-  const cardNumber = document.getElementById("manualCardNumber").value.trim();
-  if (!cardNumber) {
-    alert("Voer eerst een kaartnummer in!");
+  const input = document.getElementById("manualCardInput").value.trim();
+  if (!input) {
+    alert("Voer eerst een kaartnummer of naam in!");
     return;
   }
-  await addCardByNumber(cardNumber);
-  document.getElementById("manualCardNumber").value = "";
+  await addCard(input);
+  document.getElementById("manualCardInput").value = "";
 }
 
 // 🌟 Render collectie met sorteren
