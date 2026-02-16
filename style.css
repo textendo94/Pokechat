@@ -19,6 +19,14 @@ button:hover {
   background-color: #1565c0;
 }
 
+input {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #555;
+  margin-right: 5px;
+  width: 200px;
+}
+
 video {
   margin-bottom: 10px;
   border: 2px solid #fff;
