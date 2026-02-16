@@ -10,17 +10,32 @@
 
 <h1>Mijn Pokémon Collectie</h1>
 
-<h2>Scan je kaart</h2>
+<h2>Scan je kaart(en)</h2>
 <video id="camera" autoplay playsinline style="width:100%; border-radius:12px;"></video>
 <canvas id="snapshot" style="display:none;"></canvas>
 <button onclick="startCamera()">Start Camera</button>
-<button onclick="takePhoto()">Maak Foto & Scan</button>
+<button onclick="takePhoto()">Maak Foto & Scan (multi-kaart)</button>
+
+<h2>Gevonden Kaarten Preview</h2>
+<ul id="previewList"></ul>
+<button id="addSelectedBtn" onclick="addSelectedCards()">Voeg geselecteerde kaarten toe</button>
 
 <h2>Handmatige kaart toevoegen</h2>
 <input type="text" id="manualCardNumber" placeholder="Voer kaartnummer in (bijv. 12/189)">
 <button onclick="addManualCard()">Voeg kaart toe</button>
 
+<h2>Filters & Sorteren</h2>
+<select id="sortSelect" onchange="renderCollection()">
+  <option value="name-asc">Naam A → Z</option>
+  <option value="name-desc">Naam Z → A</option>
+  <option value="set-asc">Set A → Z</option>
+  <option value="set-desc">Set Z → A</option>
+  <option value="price-asc">Prijs laag → hoog</option>
+  <option value="price-desc">Prijs hoog → laag</option>
+</select>
+
 <h2>Mijn Collectie</h2>
+<h3>Totaalwaarde collectie: €<span id="totalValue">0</span></h3>
 <ul id="collectionList"></ul>
 
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
