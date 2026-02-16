@@ -1,5 +1,6 @@
-// 🌟 Globale collectie
+// 🌟 Globale collectie en preview
 let collection = JSON.parse(localStorage.getItem("collection")) || [];
+let previewCards = []; // tijdelijke previewlijst
 renderCollection();
 
 // 🌟 Camera starten
@@ -16,26 +17,20 @@ async function startCamera() {
   }
 }
 
-// 🌟 Foto maken en OCR met voorverwerking + retry
+// 🌟 Foto maken en OCR voor meerdere kaarten
 async function takePhoto() {
   const video = document.getElementById("camera");
   const canvas = document.getElementById("snapshot");
   const context = canvas.getContext("2d");
 
-  // Stop camera zodra foto gemaakt is
-  if (videoStream) {
-    videoStream.getTracks().forEach(track => track.stop());
-  }
-
-  // 📌 Crop onderste 25% voor OCR
-  const cropHeight = video.videoHeight * 0.25;
-  const cropY = video.videoHeight - cropHeight;
+  // Stop camera
+  if (videoStream) videoStream.getTracks().forEach(track => track.stop());
 
   canvas.width = video.videoWidth;
-  canvas.height = cropHeight;
-  context.drawImage(video, 0, cropY, video.videoWidth, cropHeight, 0, 0, video.videoWidth, cropHeight);
+  canvas.height = video.videoHeight;
+  context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
 
-  // 📌 Voorverwerking: grijswaarden + contrast
+  // Grijswaarden + contrast
   let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
   let data = imageData.data;
   for (let i = 0; i < data.length; i += 4) {
@@ -50,26 +45,33 @@ async function takePhoto() {
   alert("Scannen... even wachten");
 
   try {
-    let text = "";
-    const maxRetries = 3;
+    const result = await Tesseract.recognize(canvas, 'eng', { logger: m => console.log(m) });
+    const text = result.data.text;
+    console.log("OCR tekst:", text);
 
-    for (let i = 0; i < maxRetries; i++) {
-      const result = await Tesseract.recognize(canvas, 'eng', { logger: m => console.log(m) });
-      text = result.data.text;
-      console.log(`OCR poging ${i+1}:`, text);
-      if (text.match(/\d+\/\d+/)) break;
-    }
-
-    const match = text.match(/\d+\/\d+/);
-    if (!match) {
-      alert("Geen setnummer gevonden. Probeer handmatig toe te voegen of betere belichting.");
+    const matches = text.match(/\d+\/\d+/g);
+    if (!matches || matches.length === 0) {
+      alert("Geen kaartnummers gevonden.");
       return;
     }
 
-    const cardNumber = match[0];
-    alert("Nummer gevonden: " + cardNumber);
+    alert(`Gevonden ${matches.length} kaart(s): ${matches.join(", ")}`);
 
-    await addCardByNumber(cardNumber, photoData);
+    // 🌟 Preview opbouwen
+    previewCards = [];
+    const previewList = document.getElementById("previewList");
+    previewList.innerHTML = "";
+
+    for (const cardNumber of matches) {
+      previewCards.push({ number: cardNumber, image: photoData, selected: true });
+
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <input type="checkbox" checked data-number="${cardNumber}"> ${cardNumber}
+        <img src="${photoData}" width="60" style="vertical-align:middle; margin-left:10px;">
+      `;
+      previewList.appendChild(li);
+    }
 
   } catch (err) {
     alert("Fout bij scannen of ophalen: " + err.message);
@@ -77,7 +79,23 @@ async function takePhoto() {
   }
 }
 
-// 🌟 Functie voor het ophalen van kaart via API (hergebruikt door OCR en handmatig)
+// 🌟 Voeg geselecteerde kaarten toe vanuit preview
+async function addSelectedCards() {
+  const checkboxes = document.querySelectorAll("#previewList input[type='checkbox']");
+  for (const box of checkboxes) {
+    if (box.checked) {
+      const card = previewCards.find(c => c.number === box.dataset.number);
+      if (card) {
+        await addCardByNumber(card.number, card.image);
+      }
+    }
+  }
+  // Preview leegmaken
+  previewCards = [];
+  document.getElementById("previewList").innerHTML = "";
+}
+
+// 🌟 Kaart toevoegen via API
 async function addCardByNumber(cardNumber, fallbackImage = "") {
   try {
     const response = await fetch(`https://api.pokemontcg.io/v2/cards?q=number:${cardNumber}&pageSize=1`);
@@ -108,7 +126,7 @@ async function addCardByNumber(cardNumber, fallbackImage = "") {
   }
 }
 
-// 🌟 Handmatig kaart toevoegen
+// 🌟 Handmatig toevoegen
 async function addManualCard() {
   const cardNumber = document.getElementById("manualCardNumber").value.trim();
   if (!cardNumber) {
@@ -119,12 +137,24 @@ async function addManualCard() {
   document.getElementById("manualCardNumber").value = "";
 }
 
-// 🌟 Collectie renderen
+// 🌟 Render collectie met sorteren
 function renderCollection() {
   const list = document.getElementById("collectionList");
   list.innerHTML = "";
 
-  collection.forEach((card, index) => {
+  const sort = document.getElementById("sortSelect").value;
+  let sorted = [...collection];
+
+  switch(sort) {
+    case "name-asc": sorted.sort((a,b)=>a.name.localeCompare(b.name)); break;
+    case "name-desc": sorted.sort((a,b)=>b.name.localeCompare(a.name)); break;
+    case "set-asc": sorted.sort((a,b)=>a.set.localeCompare(b.set)); break;
+    case "set-desc": sorted.sort((a,b)=>b.set.localeCompare(a.set)); break;
+    case "price-asc": sorted.sort((a,b)=>a.price - b.price); break;
+    case "price-desc": sorted.sort((a,b)=>b.price - a.price); break;
+  }
+
+  sorted.forEach((card, index) => {
     const li = document.createElement("li");
     li.innerHTML = `
       <img src="${card.image}" width="80" style="vertical-align:middle; margin-right:10px;">
@@ -133,6 +163,8 @@ function renderCollection() {
     `;
     list.appendChild(li);
   });
+
+  updateTotalValue();
 }
 
 // 🌟 Kaart verwijderen
@@ -140,4 +172,10 @@ function removeCard(index) {
   collection.splice(index, 1);
   localStorage.setItem("collection", JSON.stringify(collection));
   renderCollection();
+}
+
+// 🌟 Bereken totaalwaarde
+function updateTotalValue() {
+  const total = collection.reduce((sum, card) => sum + parseFloat(card.price || 0), 0);
+  document.getElementById("totalValue").textContent = total.toFixed(2);
 }
