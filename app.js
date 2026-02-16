@@ -1,3 +1,6 @@
+// 🌟 Jouw API key
+const API_KEY = "b5a3c0b3-7d9a-405d-954c-2527beff9e6f";
+
 // 🌟 Globale collectie en preview
 let collection = JSON.parse(localStorage.getItem("collection")) || [];
 let previewCards = [];
@@ -29,7 +32,7 @@ async function takePhoto() {
   canvas.height = video.videoHeight;
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-  // 🌟 Snelheidsoptimalisatie: verklein indien te groot
+  // 🌟 Snelheidsoptimalisatie: verklein indien nodig
   const maxWidth = 800;
   if (canvas.width > maxWidth) {
     const scale = maxWidth / canvas.width;
@@ -43,7 +46,7 @@ async function takePhoto() {
     ctx.drawImage(tmpCanvas, 0, 0);
   }
 
-  // 🌟 Preprocessing: grijswaarden + contrast + threshold voor OCR
+  // 🌟 Preprocessing: grijswaarden + contrast + threshold
   let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   let d = imgData.data;
   for (let i = 0; i < d.length; i += 4) {
@@ -67,6 +70,7 @@ async function takePhoto() {
     const text = result.data.text;
     console.log("OCR tekst:", text);
 
+    // 🌟 Alle mogelijke kaartnummers en tekst detecteren
     let matches = [];
     const lines = text.split("\n").map(l => l.trim()).filter(l => l.length > 0);
     lines.forEach(line => {
@@ -81,6 +85,7 @@ async function takePhoto() {
 
     alert(`Gevonden ${matches.length} kaart(s): ${matches.join(", ")}`);
 
+    // 🌟 Preview opbouwen
     previewCards = [];
     const previewList = document.getElementById("previewList");
     previewList.innerHTML = "";
@@ -115,12 +120,15 @@ async function addSelectedCards() {
   document.getElementById("previewList").innerHTML = "";
 }
 
-// 🌟 Kaart toevoegen via API (op naam of nummer)
+// 🌟 Kaart toevoegen via API (fuzzy search)
 async function addCard(input, fallbackImage = "") {
   try {
-    let query = input.match(/^\d+\/\d+$/) ? `number:${input}` : `name:"${input}"`;
+    // 🌟 Fuzzy search: eerst nummer, daarna naam substring
+    let query = input.match(/^\d+\/\d+$/) ? `number:${input}` : `name:${input}`;
 
-    const response = await fetch(`https://api.pokemontcg.io/v2/cards?q=${query}&pageSize=1`);
+    const response = await fetch(`https://api.pokemontcg.io/v2/cards?q=${query}&pageSize=5`, {
+      headers: { "X-Api-Key": API_KEY }
+    });
     const data = await response.json();
 
     if (!data.data || data.data.length === 0) {
@@ -128,7 +136,8 @@ async function addCard(input, fallbackImage = "") {
       return;
     }
 
-    const card = data.data[0];
+    // 🌟 Toon lijst van mogelijke matches
+    const card = data.data[0]; // eerste match
     const name = card.name;
     const set = card.set.name;
     const image = card.images.small || fallbackImage;
