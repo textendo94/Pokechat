@@ -3,36 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PokéValue</title>
+  <title>Pokémon Kaart Scanner</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1>PokéValue</h1>
-    <button id="darkModeToggle">🌙</button>
-  </header>
 
-  <section id="scanner">
-    <h2>Kaart scannen</h2>
-    <video id="camera" autoplay></video>
-    <button onclick="captureCard()">Scan Kaart</button>
-  </section>
+<h1>Mijn Pokémon Collectie</h1>
 
-  <section id="filters">
-    <h2>Filters</h2>
-    <label>Set: <input type="text" id="filterSet"></label>
-    <label>Waarde min (€): <input type="number" id="filterMin"></label>
-    <label>Waarde max (€): <input type="number" id="filterMax"></label>
-    <button id="applyFilters">Toepassen</button>
-  </section>
+<!-- Camera Scan -->
+<h2>Scan je kaart</h2>
+<video id="camera" autoplay playsinline style="width:100%; border-radius:12px;"></video>
+<canvas id="snapshot" style="display:none;"></canvas>
+<button onclick="startCamera()">Start Camera</button>
+<button onclick="captureCard()">Scan Kaart</button>
 
-  <section id="collection">
-    <h2>Mijn collectie</h2>
-    <div id="totalValue">Totaalwaarde: €0</div>
-    <ul id="cardsList"></ul>
-  </section>
+<!-- Collectie -->
+<h2>Mijn Collectie</h2>
+<ul id="collectionList"></ul>
 
-  <script src="app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+<script src="app.js"></script>
+
 </body>
 </html>
