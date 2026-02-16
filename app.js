@@ -20,7 +20,7 @@ async function startCamera() {
   }
 }
 
-// 🌟 Foto maken en OCR verbeteren
+// 🌟 Foto maken en OCR
 async function takePhoto() {
   const video = document.getElementById("camera");
   const canvas = document.getElementById("snapshot");
@@ -44,7 +44,6 @@ async function takePhoto() {
     ctx.drawImage(tmpCanvas, 0, 0);
   }
 
-  // Contrast & threshold
   let imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
   for (let i=0;i<imgData.data.length;i+=4){
     let gray = imgData.data[i]*0.3 + imgData.data[i+1]*0.59 + imgData.data[i+2]*0.11;
