@@ -3,33 +3,69 @@ let collection = JSON.parse(localStorage.getItem("collection")) || [];
 const video = document.getElementById("camera");
 
 async function captureCard() {
-    alert("Knop werkt");  // test alert
+  const video = document.getElementById("camera");
+  const canvas = document.getElementById("snapshot");
+  const context = canvas.getContext("2d");
 
-    const video = document.getElementById("camera");
-    const canvas = document.getElementById("snapshot");
-    const context = canvas.getContext("2d");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  context.drawImage(video, 0, 0);
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+  alert("Scannen... even wachten");
 
-    context.drawImage(video, 0, 0);
+  try {
+    const { data: { text } } = await Tesseract.recognize(canvas, 'eng');
 
-    alert("Scannen... even wachten");
+    console.log("OCR tekst:", text);
 
-    const { data: { text } } = await Tesseract.recognize(
-        canvas,
-        'eng'
-    );
-
-    console.log(text);
-
+    // Zoek nummer zoals 123/189
     const match = text.match(/\d+\/\d+/);
 
-    if (match) {
-        alert("Nummer gevonden: " + match[0]);
-    } else {
-        alert("Geen setnummer gevonden. Probeer dichterbij of betere belichting.");
+    if (!match) {
+      alert("Geen setnummer gevonden. Probeer dichterbij of betere belichting.");
+      return;
     }
+
+    const cardNumber = match[0];
+    alert("Nummer gevonden: " + cardNumber);
+
+    // API call naar Pokémon TCG
+    const response = await fetch(`https://api.pokemontcg.io/v2/cards?q=number:${cardNumber}&pageSize=1`);
+    const data = await response.json();
+
+    if (!data.data || data.data.length === 0) {
+      alert("Kaart niet gevonden in database.");
+      return;
+    }
+
+    const card = data.data[0];
+
+    const name = card.name;
+    const set = card.set.name;
+    const image = card.images.small;
+
+    const price =
+      card.tcgplayer?.prices?.holofoil?.market ||
+      card.tcgplayer?.prices?.normal?.market ||
+      0;
+
+    // Voeg toe aan collectie
+    collection.push({
+      name,
+      set,
+      price,
+      quantity: 1,
+      image
+    });
+
+    localStorage.setItem("collection", JSON.stringify(collection));
+    renderCollection();
+
+    alert(`${name} toegevoegd!`);
+  } catch (err) {
+    alert("Fout bij scannen of ophalen: " + err.message);
+    console.error(err);
+  }
 }
 
 // Achtercamera
