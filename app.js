@@ -1,5 +1,5 @@
-// 🌟 Jouw API key
-const API_KEY = "b5a3c0b3-7d9a-405d-954c-2527beff9e6f";
+// 🌟 Nieuwe API key
+const API_KEY = "21f50505-4de2-4054-9321-bab450f6bee5";
 
 // 🌟 Globale collectie en preview
 let collection = JSON.parse(localStorage.getItem("collection")) || [];
@@ -32,28 +32,6 @@ async function takePhoto() {
   canvas.height = video.videoHeight;
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-  const maxWidth = 800;
-  if (canvas.width > maxWidth) {
-    const scale = maxWidth / canvas.width;
-    const tmpCanvas = document.createElement("canvas");
-    tmpCanvas.width = canvas.width * scale;
-    tmpCanvas.height = canvas.height * scale;
-    tmpCanvas.getContext("2d").drawImage(canvas, 0, 0, tmpCanvas.width, tmpCanvas.height);
-    canvas.width = tmpCanvas.width;
-    canvas.height = tmpCanvas.height;
-    ctx.drawImage(tmpCanvas, 0, 0);
-  }
-
-  let imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
-  for (let i=0;i<imgData.data.length;i+=4){
-    let gray = imgData.data[i]*0.3 + imgData.data[i+1]*0.59 + imgData.data[i+2]*0.11;
-    gray = ((gray-128)*1.8)+128;
-    gray = gray>200?255:gray;
-    gray = gray<100?0:gray;
-    imgData.data[i]=imgData.data[i+1]=imgData.data[i+2]=gray;
-  }
-  ctx.putImageData(imgData,0,0);
-
   const photoData = canvas.toDataURL("image/png");
   alert("Scannen... even wachten");
 
@@ -62,31 +40,27 @@ async function takePhoto() {
       logger: m=>console.log(m),
       tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/ "
     });
-    const text = result.data.text;
+    const text = result.data.text.trim();
     console.log("OCR:",text);
 
-    let matches=[];
-    text.split("\n").map(l=>l.trim()).filter(l=>l.length>0).forEach(line=>{
-      const found=line.match(/\d+\/\d+/g);
-      if(found) matches.push(...found);
-    });
-
-    if(matches.length===0){
-      alert("Geen kaartnummers gevonden. Gebruik handmatige invoer of betere belichting.");
+    if(!text) {
+      alert("Geen tekst herkend. Probeer betere belichting of handmatige invoer.");
       return;
     }
 
-    alert(`Gevonden ${matches.length} kaart(s): ${matches.join(", ")}`);
-
-    previewCards=[];
+    previewCards = [];
     const previewList=document.getElementById("previewList");
     previewList.innerHTML="";
-    matches.forEach(num=>{
-      previewCards.push({number:num,image:photoData,selected:true});
+
+    // Elke regel controleren op iets dat op een kaartnummer lijkt of naam
+    text.split("\n").map(l=>l.trim()).filter(l=>l.length>0).forEach(line=>{
+      previewCards.push({number:line,image:photoData,selected:true});
       const li=document.createElement("li");
-      li.innerHTML=`<input type="checkbox" checked data-number="${num}"> ${num} <img src="${photoData}" width="60" style="vertical-align:middle; margin-left:10px;">`;
+      li.innerHTML=`<input type="checkbox" checked data-number="${line}"> ${line} <img src="${photoData}" width="60" style="vertical-align:middle; margin-left:10px;">`;
       previewList.appendChild(li);
     });
+
+    alert(`Gevonden ${previewCards.length} mogelijke kaart(en)`);
 
   } catch(err){alert("Fout bij OCR: "+err.message); console.error(err);}
 }
@@ -104,27 +78,28 @@ async function addSelectedCards(){
   document.getElementById("previewList").innerHTML="";
 }
 
-// 🌟 Kaart toevoegen via API (fuzzy search)
+// 🌟 Kaart toevoegen via API (met fuzzy search)
 async function addCard(input,fallbackImage=""){
   try{
-    const query=input.match(/^\d+\/\d+$/)?`number:${input}`:`name:${input}`;
-    const response=await fetch(`https://api.pokemontcg.io/v2/cards?q=${query}&pageSize=5`,{
-      headers:{"X-Api-Key":API_KEY}
+    const query = `q=name:${input}*`; // * = fuzzy search zodat niet exact hoeft
+    const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=5`, {
+      headers: {"X-Api-Key": API_KEY}
     });
-    const data=await response.json();
-    if(!data.data||data.data.length===0){alert(`Kaart "${input}" niet gevonden`);return;}
+    const data = await response.json();
 
-    const card=data.data[0];
-    const name=card.name;
-    const set=card.set.name;
-    const image=card.images.small||fallbackImage;
-    const price=card.tcgplayer?.prices?.holofoil?.market||card.tcgplayer?.prices?.normal?.market||0;
+    if(!data.data || data.data.length===0){alert(`Kaart "${input}" niet gevonden`);return;}
+
+    const card = data.data[0]; // pak de eerste match
+    const name = card.name;
+    const set = card.set.name;
+    const image = card.images.small || fallbackImage;
+    const price = card.tcgplayer?.prices?.holofoil?.market || card.tcgplayer?.prices?.normal?.market || 0;
 
     collection.push({name,set,price,quantity:1,image});
     localStorage.setItem("collection",JSON.stringify(collection));
     renderCollection();
     alert(`${name} toegevoegd!`);
-  }catch(err){alert("Fout bij API: "+err.message); console.error(err);}
+  } catch(err){alert("Fout bij API: "+err.message); console.error(err);}
 }
 
 // 🌟 Handmatig toevoegen
