@@ -10,13 +10,18 @@ async function addCard(input) {
   try {
     if(!input) { alert("Voer eerst een kaartnaam in!"); return; }
 
-    // Fuzzy search zodat exacte set niet nodig is
-    const query = `q=name:${input}*`;
+    // Encodeer input om speciale tekens te voorkomen
+    const query = `q=name:${encodeURIComponent(input)}`;
     console.log("API query:", query);
 
     const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=5`, {
       headers: { "X-Api-Key": API_KEY }
     });
+
+    if(!response.ok){
+      alert("API request mislukt: " + response.status);
+      return;
+    }
 
     const data = await response.json();
 
@@ -25,7 +30,7 @@ async function addCard(input) {
       return;
     }
 
-    const card = data.data[0]; // pak eerste match
+    const card = data.data[0];
     const name = card.name;
     const set = card.set.name;
     const image = card.images.small || "";
@@ -67,7 +72,7 @@ function renderCollection() {
 
   sorted.forEach((card,index)=>{
     const li = document.createElement("li");
-    li.innerHTML = `<img src="${card.image}" width="80" style="vertical-align:middle; margin-right:10px;">
+    li.innerHTML = `<img src="${card.image}" width="80">
                     <strong>${card.name}</strong> (${card.set}) - €${card.price}
                     <button onclick="removeCard(${index})">Verwijderen</button>`;
     list.appendChild(li);
