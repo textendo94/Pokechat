@@ -2,7 +2,7 @@
 let collection = JSON.parse(localStorage.getItem("collection")) || [];
 renderCollection();
 
-// 🌟 Camera openen
+// 🌟 Camera starten
 let videoStream;
 async function startCamera() {
   const video = document.getElementById("camera");
@@ -16,15 +16,23 @@ async function startCamera() {
   }
 }
 
-// 🌟 Kaart scannen + OCR + toevoegen
-async function captureCard() {
+// 🌟 Foto maken en OCR
+async function takePhoto() {
   const video = document.getElementById("camera");
   const canvas = document.getElementById("snapshot");
   const context = canvas.getContext("2d");
 
-  canvas.width = video.videoWidth || 640;
-  canvas.height = video.videoHeight || 480;
-  context.drawImage(video, 0, 0);
+  // 📌 Alleen onderste 20% croppen
+  const cropHeight = video.videoHeight * 0.2;
+  const cropY = video.videoHeight - cropHeight;
+
+  canvas.width = video.videoWidth;
+  canvas.height = cropHeight;
+
+  context.drawImage(video, 0, cropY, video.videoWidth, cropHeight, 0, 0, video.videoWidth, cropHeight);
+
+  // Maak foto ook zichtbaar (optioneel)
+  const photoData = canvas.toDataURL("image/png");
 
   alert("Scannen... even wachten");
 
@@ -34,7 +42,7 @@ async function captureCard() {
 
     const match = text.match(/\d+\/\d+/);
     if (!match) {
-      alert("Geen setnummer gevonden. Probeer dichterbij of betere belichting.");
+      alert("Geen setnummer gevonden. Probeer betere belichting of focus op het nummer.");
       return;
     }
 
@@ -54,7 +62,7 @@ async function captureCard() {
 
     const name = card.name;
     const set = card.set.name;
-    const image = card.images.small;
+    const image = card.images.small || photoData; // gebruik foto als fallback
     const price =
       card.tcgplayer?.prices?.holofoil?.market ||
       card.tcgplayer?.prices?.normal?.market ||
