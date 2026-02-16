@@ -10,20 +10,18 @@
 
 <h1>Mijn Pokémon Collectie</h1>
 
-<!-- Camera Scan -->
+<!-- Camera / Foto -->
 <h2>Scan je kaart</h2>
 <video id="camera" autoplay playsinline style="width:100%; border-radius:12px;"></video>
 <canvas id="snapshot" style="display:none;"></canvas>
 <button onclick="startCamera()">Start Camera</button>
-<button onclick="captureCard()">Scan Kaart</button>
+<button onclick="takePhoto()">Maak Foto & Scan</button>
 
 <!-- Collectie -->
 <h2>Mijn Collectie</h2>
 <ul id="collectionList"></ul>
 
-<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 <script src="app.js"></script>
-
 </body>
 </html>
