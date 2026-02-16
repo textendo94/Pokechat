@@ -3,25 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pokémon Kaart Scanner</title>
+  <title>Pokémon Kaart Collectie</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <h1>Mijn Pokémon Collectie</h1>
 
-<h2>Scan je kaart(en)</h2>
-<video id="camera" autoplay playsinline style="width:100%; border-radius:12px;"></video>
-<canvas id="snapshot" style="display:none;"></canvas>
-<button onclick="startCamera()">Start Camera</button>
-<button onclick="takePhoto()">Maak Foto & Scan (multi-kaart)</button>
-
-<h2>Gevonden Kaarten Preview</h2>
-<ul id="previewList"></ul>
-<button onclick="addSelectedCards()">Voeg geselecteerde kaarten toe</button>
-
 <h2>Handmatige kaart toevoegen</h2>
-<input type="text" id="manualCardInput" placeholder="Voer kaartnummer of naam in (bijv. 25/189 of Pikachu)">
+<input type="text" id="manualCardInput" placeholder="Voer kaartnaam in (bijv. Pikachu)">
 <button onclick="addManualCard()">Voeg kaart toe</button>
 
 <h2>Filters & Sorteren</h2>
@@ -38,10 +28,6 @@
 <h3>Totaalwaarde collectie: €<span id="totalValue">0</span></h3>
 <ul id="collectionList"></ul>
 
-<!-- Tesseract.js OCR -->
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
-<!-- App functionaliteit -->
 <script src="app.js"></script>
-
 </body>
 </html>
