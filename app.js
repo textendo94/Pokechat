@@ -2,6 +2,36 @@ let collection = JSON.parse(localStorage.getItem("collection")) || [];
 
 const video = document.getElementById("camera");
 
+async function captureCard() {
+    alert("Knop werkt");  // test alert
+
+    const video = document.getElementById("camera");
+    const canvas = document.getElementById("snapshot");
+    const context = canvas.getContext("2d");
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    context.drawImage(video, 0, 0);
+
+    alert("Scannen... even wachten");
+
+    const { data: { text } } = await Tesseract.recognize(
+        canvas,
+        'eng'
+    );
+
+    console.log(text);
+
+    const match = text.match(/\d+\/\d+/);
+
+    if (match) {
+        alert("Nummer gevonden: " + match[0]);
+    } else {
+        alert("Geen setnummer gevonden. Probeer dichterbij of betere belichting.");
+    }
+}
+
 // Achtercamera
 navigator.mediaDevices.getUserMedia({
   video: { facingMode: "environment" }
